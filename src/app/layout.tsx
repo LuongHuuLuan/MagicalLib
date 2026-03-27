@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import MagicCursor from "@/components/MagicCursor";
 
 export const metadata: Metadata = {
   title: "Magical Floating Library",
@@ -14,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <MagicCursor />
         {children}
       </body>
     </html>

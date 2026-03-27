@@ -44,7 +44,7 @@ const generateBooks = (count: number): BookData[] => {
   });
 };
 
-const INITIAL_BOOKS = generateBooks(150);
+const INITIAL_BOOKS = generateBooks(80);
 
 function HoverLight() {
   const hoveredBookId = useLibraryStore((state) => state.hoveredBookId);
@@ -98,7 +98,7 @@ function SceneContent() {
 
     if (selectedBookId) {
       orbitRef.current.enabled = false;
-      state.camera.position.lerp(new THREE.Vector3(0, 1.5, 8.5), 0.05);
+      state.camera.position.lerp(new THREE.Vector3(0, 1.5, 10.5), 0.05);
       state.camera.lookAt(0, -0.5, 4);
       isReturning.current = true;
     } else if (isReturning.current) {
@@ -153,19 +153,13 @@ function SceneContent() {
       <Environment preset="forest" />
 
       <EffectComposer multisampling={0}>
-        <DepthOfField
-          focusDistance={0.012}
-          focalLength={0.015}
-          bokehScale={1.2}
-          height={480}
-        />
         <Bloom
-          intensity={0.8}
-          luminanceThreshold={0.2}
-          luminanceSmoothing={0.8}
+          intensity={0.4}
+          luminanceThreshold={0.5}
+          luminanceSmoothing={0.5}
           mipmapBlur
         />
-        <Vignette eskil={false} offset={0.15} darkness={1.2} />
+        <Vignette eskil={false} offset={0.1} darkness={1.1} />
       </EffectComposer>
 
       <OrbitControls

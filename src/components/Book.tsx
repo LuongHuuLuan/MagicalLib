@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useMemo, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Html, useCursor, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { BookData, useLibraryStore } from '@/lib/store';
@@ -49,6 +49,8 @@ export default function Book({ data }: BookProps) {
   }, [data.id]);
 
   const theme = CATEGORY_THEMES[data.category as string] ?? DEFAULT_THEME;
+  const camera = useThree((state) => state.camera);
+  const distanceToCamera = useMemo(() => new THREE.Vector3(), []);
 
   const wasSelected = useRef(false);
 
@@ -175,9 +177,9 @@ export default function Book({ data }: BookProps) {
         setHoveredBook(null);
       }}
     >
-      {/* Invisible hitbox */}
+      {/* Much larger invisible hitbox for easier hovering/clicking */}
       <mesh>
-        <boxGeometry args={[2.2, 3.0, 0.6]} />
+        <boxGeometry args={[3.5, 4.5, 1.2]} />
         <meshBasicMaterial colorWrite={false} depthWrite={false} transparent opacity={0} />
       </mesh>
 
@@ -187,13 +189,14 @@ export default function Book({ data }: BookProps) {
         <meshStandardMaterial color={data.coverColor} roughness={0.8} />
       </mesh>
 
-      {/* Front Cover */}
+      {/* Front Cover - only show HTML when close or selected for performance */}
       <group position={[-0.73, 0, 0.18]} ref={coverRef}>
         <mesh position={[0.73, 0, 0]}>
           <boxGeometry args={[1.46, 2.4, 0.08]} />
           <meshStandardMaterial color={theme.bg} roughness={0.7} />
-          <Html transform position={[0, 0, 0.042]} distanceFactor={4.5} zIndexRange={[100, 0]}>
-            {/* Rich CSS Book Cover */}
+          {(isSelected || hovered || (groupRef.current && camera.position.distanceTo(groupRef.current.position) < 45)) && (
+            <Html transform position={[0, 0, 0.042]} distanceFactor={4.5} zIndexRange={[100, 0]} pointerEvents="none">
+              {/* Rich CSS Book Cover */}
             <div style={{
               width: '144px',
               height: '224px',
@@ -292,32 +295,14 @@ export default function Book({ data }: BookProps) {
               </div>
             </div>
           </Html>
+          )}
         </mesh>
       </group>
 
-      {/* Back Cover */}
+      {/* Back Cover - Simplified for performance (Removed HTML) */}
       <mesh position={[0, 0, -0.18]} receiveShadow rotation={[0, Math.PI, 0]}>
         <boxGeometry args={[1.52, 2.4, 0.08]} />
         <meshStandardMaterial color={data.coverColor} roughness={0.4} metalness={0.3} />
-        <Html transform position={[0, 0, 0.042]} distanceFactor={4.5} zIndexRange={[100, 0]}>
-          <div style={{
-            width: '144px', height: '224px',
-            background: `linear-gradient(180deg, #0a0a0a 0%, #1a1209 100%)`,
-            border: `1px solid ${theme.accent}33`,
-            borderRadius: '3px',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            padding: '16px 12px', boxSizing: 'border-box',
-            opacity: 0.7, pointerEvents: 'none', gap: '8px',
-          }}>
-            <div style={{ color: `${theme.accent}99`, fontSize: '20px' }}>{theme.pattern}</div>
-            <div style={{ color: `${theme.accent}66`, fontSize: '8px', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'serif', textAlign: 'center' }}>
-              Thư Viện<br/>Huyền Bí
-            </div>
-            <div style={{ width: '40px', height: '1px', background: `${theme.accent}44` }} />
-            <div style={{ color: `${theme.accent}44`, fontSize: '7px', letterSpacing: '0.15em', textTransform: 'uppercase', fontFamily: 'serif' }}>Bản Chép Tay</div>
-          </div>
-        </Html>
       </mesh>
 
       {/* Pages Block */}
@@ -328,17 +313,17 @@ export default function Book({ data }: BookProps) {
 
       {/* Title Label on hover */}
       {(hovered && !isSelected) && (
-        <Html position={[0, 1.8, 0]} center distanceFactor={5} zIndexRange={[50, 0]}>
+        <Html position={[0, 2.2, 0]} center distanceFactor={5} zIndexRange={[50, 0]} pointerEvents="none">
           <div style={{
-            background: 'rgba(0,0,0,0.93)',
-            border: `2px solid ${theme.accent}88`,
-            padding: '10px 20px', borderRadius: '8px',
+            background: 'rgba(5, 5, 5, 0.95)',
+            border: `2px solid ${theme.accent}`,
+            padding: '12px 24px', borderRadius: '10px',
             whiteSpace: 'nowrap', pointerEvents: 'none',
-            backdropFilter: 'blur(12px)',
-            boxShadow: `0 0 20px ${theme.accent}44`,
+            boxShadow: `0 0 30px ${theme.accent}66`,
+            transform: 'scale(1.2)',
           }}>
-            <div style={{ color: theme.accent, fontSize: '13px', letterSpacing: '0.25em', textTransform: 'uppercase', fontFamily: 'serif', marginBottom: '4px', textAlign: 'center' }}>{data.category}</div>
-            <div style={{ color: '#fff', fontSize: '20px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 'bold', textShadow: `0 0 12px ${theme.accent}`, textAlign: 'center', maxWidth: '260px', lineHeight: '1.3' }}>{data.title}</div>
+            <div style={{ color: theme.accent, fontSize: '14px', letterSpacing: '0.3em', textTransform: 'uppercase', fontFamily: 'serif', marginBottom: '6px', textAlign: 'center' }}>{data.category}</div>
+            <div style={{ color: '#fff', fontSize: '24px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 'bold', textShadow: `0 0 15px ${theme.accent}`, textAlign: 'center', maxWidth: '300px', lineHeight: '1.2' }}>{data.title}</div>
           </div>
         </Html>
       )}

@@ -6,12 +6,20 @@
   --foreground: #f0f5f0;
 }
 
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  cursor: none !important;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   overflow: hidden; /* Prevent scrolling for the 3D scene */
+  cursor: none !important;
 }
 
 @layer utilities {

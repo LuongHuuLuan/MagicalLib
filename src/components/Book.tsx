@@ -12,15 +12,7 @@ interface BookProps {
   data: BookData;
 }
 
-// Category-based cover themes
-const CATEGORY_THEMES: Record<string, { bg: string; accent: string; badge: string; pattern: string }> = {
-  'Cổ tích':     { bg: '#2a1505', accent: '#f5a623', badge: '#7a3f00',  pattern: '✦' },
-  'Truyền thuyết':{ bg: '#0d1f3c', accent: '#4fc3f7', badge: '#1a3a6b',  pattern: '⚜' },
-  'Thần thoại':  { bg: '#1a0530', accent: '#ce93d8', badge: '#4a0080',  pattern: '✵' },
-  'Ngụ ngôn':    { bg: '#0f2318', accent: '#81c784', badge: '#1b5e20',  pattern: '❧' },
-};
-
-const DEFAULT_THEME = { bg: '#1a1209', accent: '#ffd700', badge: '#3a2800', pattern: '✦' };
+const AURA_COLORS = ['#ff71ce', '#01cdfe', '#05ffa1', '#b967ff', '#fffb96', '#ff8c00', '#00ffcc'];
 
 export default function Book({ data }: BookProps) {
   const groupRef = useRef<THREE.Group>(null);
@@ -31,7 +23,7 @@ export default function Book({ data }: BookProps) {
   const setHoveredBook = useLibraryStore((state) => state.setHoveredBook);
   const searchQuery = useLibraryStore((state) => state.searchQuery);
 
-  // Cached vector and dummy object to avoid allocations in useFrame
+  const camera = useThree((state) => state.camera);
   const targetVec = useMemo(() => new THREE.Vector3(), []);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const targetScaleVec = useMemo(() => new THREE.Vector3(), []);
@@ -39,7 +31,6 @@ export default function Book({ data }: BookProps) {
   const isSelected = selectedBookId === data.id;
   const isSearchMatch = searchQuery === '' || data.title.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const AURA_COLORS = ['#ff71ce', '#01cdfe', '#05ffa1', '#b967ff', '#fffb96', '#ff8c00', '#00ffcc'];
   const bookAuraColor = useMemo(() => {
     let hash = 0;
     for (let i = 0; i < data.id.length; i++) {
@@ -47,10 +38,6 @@ export default function Book({ data }: BookProps) {
     }
     return AURA_COLORS[Math.abs(hash) % AURA_COLORS.length];
   }, [data.id]);
-
-  const theme = CATEGORY_THEMES[data.category as string] ?? DEFAULT_THEME;
-  const camera = useThree((state) => state.camera);
-  const distanceToCamera = useMemo(() => new THREE.Vector3(), []);
 
   const wasSelected = useRef(false);
 
@@ -96,13 +83,13 @@ export default function Book({ data }: BookProps) {
     const index = parseInt(data.id.replace(/\D/g, ''));
 
     // Zoom-based Formation logic
-    const distance = state.camera.position.length();
-    let formationFactor = 1 - (distance - 30) / (70 - 30);
+    const distanceCam = state.camera.position.length();
+    let formationFactor = 1 - (distanceCam - 30) / (70 - 30);
     formationFactor = Math.max(0, Math.min(1, formationFactor));
     formationFactor = Math.pow(formationFactor, 3);
 
     // Fibonacci Sphere
-    const totalBooks = 80; // Match INITIAL_BOOKS in LibraryScene
+    const totalBooks = 80; // Corrected to match 80 books
     const sphereRadius = 25;
     const phi = Math.acos(1 - 2 * (index + 0.5) / totalBooks);
     const theta = Math.PI * (1 + Math.sqrt(5)) * index;
@@ -121,10 +108,7 @@ export default function Book({ data }: BookProps) {
 
     if (formationFactor > 0.01) {
       dummy.position.set(sphereX, sphereY, sphereZ);
-      // lookAt outward → local +Z points INWARD (toward camera at center) ✓
-      // NO rotateY: that was rotating the cover 90° sideways, breaking the fix
       dummy.lookAt(sphereX * 2, sphereY * 2, sphereZ * 2);
-
       targetRotX = THREE.MathUtils.lerp(targetRotX, dummy.rotation.x, formationFactor);
       targetRotY = THREE.MathUtils.lerp(targetRotY, dummy.rotation.y, formationFactor);
       targetRotZ = THREE.MathUtils.lerp(targetRotZ, dummy.rotation.z, formationFactor);
@@ -177,16 +161,17 @@ export default function Book({ data }: BookProps) {
         setHoveredBook(null);
       }}
     >
-      {/* Much larger invisible hitbox for easier hovering/clicking */}
       <mesh>
         <boxGeometry args={[3.5, 4.5, 1.2]} />
         <meshBasicMaterial colorWrite={false} depthWrite={false} transparent opacity={0} />
       </mesh>
 
-      {/* Spine */}
       <mesh position={[-0.76, 0, 0]}>
         <boxGeometry args={[0.10, 2.4, 0.36]} />
-        <meshStandardMaterial color={data.coverColor} rough      {/* Front Cover - only show HTML when close or selected for performance */}
+        <meshStandardMaterial color={data.coverColor} roughness={0.8} />
+      </mesh>
+
+      {/* Front Cover */}
       <group position={[-0.73, 0, 0.18]} ref={coverRef}>
         <mesh position={[0.73, 0, 0]}>
           <boxGeometry args={[1.46, 2.4, 0.08]} />
@@ -201,40 +186,34 @@ export default function Book({ data }: BookProps) {
             </Html>
           )}
         </mesh>
-      </group>  )}
-        </mesh>
       </group>
 
-      {/* Back Cover - Simplified for performance (Removed HTML) */}
       <mesh position={[0, 0, -0.18]} receiveShadow rotation={[0, Math.PI, 0]}>
         <boxGeometry args={[1.52, 2.4, 0.08]} />
         <meshStandardMaterial color={data.coverColor} roughness={0.4} metalness={0.3} />
       </mesh>
 
-      {/* Pages Block */}
       <mesh position={[0, 0, 0]}>
         <boxGeometry args={[1.43, 2.28, 0.28]} />
         <meshStandardMaterial color="#f5f5dc" roughness={0.6} />
       </mesh>
 
-      {/* Title Label on hover */}
       {(hovered && !isSelected) && (
         <Html position={[0, 2.2, 0]} center distanceFactor={5} zIndexRange={[50, 0]} pointerEvents="none">
           <div style={{
             background: 'rgba(5, 5, 5, 0.95)',
-            border: `2px solid ${theme.accent}`,
+            border: `2px solid #ffbf00`,
             padding: '12px 24px', borderRadius: '10px',
             whiteSpace: 'nowrap', pointerEvents: 'none',
-            boxShadow: `0 0 30px ${theme.accent}66`,
+            boxShadow: `0 0 30px rgba(255, 191, 0, 0.4)`,
             transform: 'scale(1.2)',
           }}>
-            <div style={{ color: theme.accent, fontSize: '14px', letterSpacing: '0.3em', textTransform: 'uppercase', fontFamily: 'serif', marginBottom: '6px', textAlign: 'center' }}>{data.category}</div>
-            <div style={{ color: '#fff', fontSize: '24px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 'bold', textShadow: `0 0 15px ${theme.accent}`, textAlign: 'center', maxWidth: '300px', lineHeight: '1.2' }}>{data.title}</div>
+            <div style={{ color: '#ffbf00', fontSize: '14px', letterSpacing: '0.3em', textTransform: 'uppercase', fontFamily: 'serif', marginBottom: '6px', textAlign: 'center' }}>{data.category}</div>
+            <div style={{ color: '#fff', fontSize: '24px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 'bold', textShadow: `0 0 15px #ffbf00`, textAlign: 'center', maxWidth: '300px', lineHeight: '1.2' }}>{data.title}</div>
           </div>
         </Html>
       )}
 
-      {/* Edge Glow Aura */}
       <mesh position={[-0.05, 0, 0]}>
         <boxGeometry args={[1.8, 2.6, 0.6]} />
         <meshBasicMaterial
@@ -246,7 +225,6 @@ export default function Book({ data }: BookProps) {
         />
       </mesh>
 
-      {/* Sparkles only on selected */}
       {isSelected && (
         <Sparkles count={20} scale={2.5} size={4} speed={0.3} opacity={0.9} color="#ffbf00" />
       )}

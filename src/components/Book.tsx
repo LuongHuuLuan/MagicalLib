@@ -119,9 +119,9 @@ export default function Book({ data }: BookProps) {
 
     if (formationFactor > 0.01) {
       dummy.position.set(sphereX, sphereY, sphereZ);
-      // FIX: lookAt outward so the cover (+Z) faces INWARD toward camera at center
+      // lookAt outward → local +Z points INWARD (toward camera at center) ✓
+      // NO rotateY: that was rotating the cover 90° sideways, breaking the fix
       dummy.lookAt(sphereX * 2, sphereY * 2, sphereZ * 2);
-      dummy.rotateY(Math.PI / 2);
 
       targetRotX = THREE.MathUtils.lerp(targetRotX, dummy.rotation.x, formationFactor);
       targetRotY = THREE.MathUtils.lerp(targetRotY, dummy.rotation.y, formationFactor);
@@ -328,16 +328,17 @@ export default function Book({ data }: BookProps) {
 
       {/* Title Label on hover */}
       {(hovered && !isSelected) && (
-        <Html position={[0, 1.6, 0]} center distanceFactor={10} zIndexRange={[50, 0]}>
+        <Html position={[0, 1.8, 0]} center distanceFactor={5} zIndexRange={[50, 0]}>
           <div style={{
-            background: 'rgba(0,0,0,0.92)',
-            border: `1px solid ${theme.accent}66`,
-            padding: '6px 14px', borderRadius: '6px',
+            background: 'rgba(0,0,0,0.93)',
+            border: `2px solid ${theme.accent}88`,
+            padding: '10px 20px', borderRadius: '8px',
             whiteSpace: 'nowrap', pointerEvents: 'none',
-            backdropFilter: 'blur(8px)',
+            backdropFilter: 'blur(12px)',
+            boxShadow: `0 0 20px ${theme.accent}44`,
           }}>
-            <div style={{ color: `${theme.accent}99`, fontSize: '9px', letterSpacing: '0.3em', textTransform: 'uppercase', fontFamily: 'serif', marginBottom: '2px' }}>{data.category}</div>
-            <div style={{ color: '#fff', fontSize: '14px', fontFamily: 'Georgia, serif', fontStyle: 'italic', textShadow: `0 0 8px ${theme.accent}` }}>{data.title}</div>
+            <div style={{ color: theme.accent, fontSize: '13px', letterSpacing: '0.25em', textTransform: 'uppercase', fontFamily: 'serif', marginBottom: '4px', textAlign: 'center' }}>{data.category}</div>
+            <div style={{ color: '#fff', fontSize: '20px', fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 'bold', textShadow: `0 0 12px ${theme.accent}`, textAlign: 'center', maxWidth: '260px', lineHeight: '1.3' }}>{data.title}</div>
           </div>
         </Html>
       )}

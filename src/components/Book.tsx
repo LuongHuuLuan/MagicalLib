@@ -102,7 +102,7 @@ export default function Book({ data }: BookProps) {
     formationFactor = Math.pow(formationFactor, 3);
 
     // Fibonacci Sphere
-    const totalBooks = 150;
+    const totalBooks = 80; // Match INITIAL_BOOKS in LibraryScene
     const sphereRadius = 25;
     const phi = Math.acos(1 - 2 * (index + 0.5) / totalBooks);
     const theta = Math.PI * (1 + Math.sqrt(5)) * index;
@@ -186,116 +186,22 @@ export default function Book({ data }: BookProps) {
       {/* Spine */}
       <mesh position={[-0.76, 0, 0]}>
         <boxGeometry args={[0.10, 2.4, 0.36]} />
-        <meshStandardMaterial color={data.coverColor} roughness={0.8} />
-      </mesh>
-
-      {/* Front Cover - only show HTML when close or selected for performance */}
+        <meshStandardMaterial color={data.coverColor} rough      {/* Front Cover - only show HTML when close or selected for performance */}
       <group position={[-0.73, 0, 0.18]} ref={coverRef}>
         <mesh position={[0.73, 0, 0]}>
           <boxGeometry args={[1.46, 2.4, 0.08]} />
-          <meshStandardMaterial color={theme.bg} roughness={0.7} />
+          <meshStandardMaterial color={data.coverColor} roughness={0.7} />
           {(isSelected || hovered || (groupRef.current && camera.position.distanceTo(groupRef.current.position) < 45)) && (
             <Html transform position={[0, 0, 0.042]} distanceFactor={4.5} zIndexRange={[100, 0]} pointerEvents="none">
-              {/* Rich CSS Book Cover */}
-            <div style={{
-              width: '144px',
-              height: '224px',
-              background: `linear-gradient(160deg, ${theme.bg} 0%, #000 100%)`,
-              border: `2px solid ${theme.accent}55`,
-              borderRadius: '3px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '10px 8px',
-              boxSizing: 'border-box',
-              boxShadow: `inset 0 0 20px ${theme.accent}22, 0 0 15px ${theme.accent}33`,
-              overflow: 'hidden',
-              position: 'relative',
-              pointerEvents: 'none',
-            }}>
-              {/* Corner ornaments */}
-              {['0 0', '0 auto', 'auto 0', 'auto auto'].map((pos, i) => (
-                <div key={i} style={{
-                  position: 'absolute',
-                  [i < 2 ? 'top' : 'bottom']: '5px',
-                  [i % 2 === 0 ? 'left' : 'right']: '5px',
-                  width: '14px', height: '14px',
-                  borderTop: i < 2 ? `1.5px solid ${theme.accent}` : 'none',
-                  borderBottom: i >= 2 ? `1.5px solid ${theme.accent}` : 'none',
-                  borderLeft: i % 2 === 0 ? `1.5px solid ${theme.accent}` : 'none',
-                  borderRight: i % 2 !== 0 ? `1.5px solid ${theme.accent}` : 'none',
-                }} />
-              ))}
-
-              {/* Category badge */}
-              <div style={{
-                background: theme.badge,
-                border: `1px solid ${theme.accent}66`,
-                borderRadius: '2px',
-                padding: '2px 8px',
-                fontSize: '8px',
-                color: theme.accent,
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                fontFamily: 'serif',
-                zIndex: 1,
-              }}>
-                {data.category}
+              <div className="w-36 h-56 flex flex-col items-center justify-center p-4 text-center pointer-events-none bg-black/40 backdrop-blur-sm border border-amber-500/20">
+                <div className="text-amber-500/80 text-5xl mb-4 drop-shadow-lg">{data.symbol}</div>
+                <div className="text-amber-200/50 text-[10px] font-serif uppercase tracking-[0.3em] mb-1">Thiên Thư</div>
+                <div className="text-white text-base font-serif italic text-amber-500/50 drop-shadow-[0_0_8px_rgba(255,191,0,0.4)] leading-tight">{data.title}</div>
               </div>
-
-              {/* Decorative divider */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
-                <div style={{ flex: 1, height: '1px', background: `linear-gradient(to right, transparent, ${theme.accent}88)` }} />
-                <span style={{ color: theme.accent, fontSize: '10px' }}>{theme.pattern}</span>
-                <div style={{ flex: 1, height: '1px', background: `linear-gradient(to left, transparent, ${theme.accent}88)` }} />
-              </div>
-
-              {/* Main symbol */}
-              <div style={{
-                fontSize: '44px',
-                lineHeight: 1,
-                filter: `drop-shadow(0 0 12px ${theme.accent})`,
-                textAlign: 'center',
-              }}>
-                {data.symbol}
-              </div>
-
-              {/* Decorative divider */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
-                <div style={{ flex: 1, height: '1px', background: `linear-gradient(to right, transparent, ${theme.accent}88)` }} />
-                <span style={{ color: theme.accent, fontSize: '10px' }}>{theme.pattern}</span>
-                <div style={{ flex: 1, height: '1px', background: `linear-gradient(to left, transparent, ${theme.accent}88)` }} />
-              </div>
-
-              {/* Book title */}
-              <div style={{
-                color: '#fff',
-                fontSize: '11px',
-                fontFamily: 'Georgia, serif',
-                fontStyle: 'italic',
-                textAlign: 'center',
-                lineHeight: '1.35',
-                textShadow: `0 0 10px ${theme.accent}99`,
-                padding: '0 4px',
-                zIndex: 1,
-              }}>
-                {data.title}
-              </div>
-
-              {/* Bottom publisher label */}
-              <div style={{
-                color: `${theme.accent}88`,
-                fontSize: '7px',
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                fontFamily: 'serif',
-              }}>
-                Thư Viện Cổ Tích
-              </div>
-            </div>
-          </Html>
+            </Html>
           )}
+        </mesh>
+      </group>  )}
         </mesh>
       </group>
 
